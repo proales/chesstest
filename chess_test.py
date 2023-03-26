@@ -28,7 +28,49 @@ def is_legal_move(piece, start, end):
         return False
 
 # Example usage
-piece_type = 'knight'
-start_position = (3, 3)  # Row 3, Column 3
-end_position = (5, 4)    # Row 5, Column 4
-print(is_legal_move(piece_type, start_position, end_position))
+# piece_type = 'knight'
+# start_position = (3, 3)  # Row 3, Column 3
+# end_position = (5, 4)    # Row 5, Column 4
+# print(is_legal_move(piece_type, start_position, end_position))
+
+import openai
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+# Define an endpoint to validate a chess move
+@app.route('/validate_move', methods=['POST'])
+def validate_move():
+    # Get the move description from the client request
+    move_description = request.json.get('move_description')
+
+    # Use GPT-3 to extract move details from the natural language description
+    prompt = f"Extract the piece, start position, and end position from the following chess move description: '{move_description}'\n\nPiece: "
+    response = openai.Completion.create(engine="davinci", prompt=prompt, max_tokens=30)
+    piece = response["choices"][0]["text"].strip()
+
+    prompt += f"{piece}\nStart position: "
+    response = openai.Completion.create(engine="davinci", prompt=prompt, max_tokens=10)
+    start = response["choices"][0]["text"].strip()
+
+    prompt += f"{start}\nEnd position: "
+    response = openai.Completion.create(engine="davinci", prompt=prompt, max_tokens=10)
+    end = response["choices"][0]["text"].strip()
+
+    # Convert start and end positions to tuples
+    start = tuple(map(int, start.split(',')))
+    end = tuple(map(int, end.split(',')))
+
+    # Check if the move is legal using the is_legal_move function
+    legal = is_legal_move(piece, start, end)
+
+    # Return the result to the client
+    return jsonify({"legal": legal})
+
+# Run the Flask app
+if __name__ == '__main__':
+    app.run()
+
+# Don't forget to set your OpenAI API key as an environment variable
+# export OPENAI_API_KEY=YOUR_API_KEY
+
