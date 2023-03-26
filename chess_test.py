@@ -70,7 +70,3 @@ def validate_move():
 # Run the Flask app
 if __name__ == '__main__':
     app.run()
-
-# Don't forget to set your OpenAI API key as an environment variable
-# export OPENAI_API_KEY=YOUR_API_KEY
-
